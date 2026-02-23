@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Holotape Player</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      #overlay {
+        /* This just provides a Pip-Boy like overlay color to the game */
+        background-color: #31b700;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+        width: 100vw;
+        height: 100vh;
+      }
+      #player-container {
+        overflow-y: hidden;
+        flex-grow: 1;
+      }
+      #player-container > * {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="player-container"></div>
+    <div id="overlay"></div>
+
+    <script>
+      const basePath = "/HoloTapes";
+      // const basePath = "/HoloTapesApp";
+
+      // const game = "AtomicCommand";
+      // const game = 'Grognak'
+      const game = "NukaTapper";
+      // const game = "PipFall";
+      // const game = "RedMenace";
+      // const game = "ZetaInvaders";
+
+      window.RufflePlayer = window.RufflePlayer || {};
+
+      const sounds = [];
+
+      // This is called by SWFs to register a sound to be played, we'll just add them to an array
+      const registerSound = (name) => {
+        console.log("registerSound", name);
+
+        const a = new Audio(`/Sounds/${name}.wav`);
+        // TODO: Handle 404's etc.
+        const i = sounds.push(a);
+        sounds[i].loop = name.contains("LP");
+      };
+
+      // Play a sound straight from the files
+      const playSound = (name) => {
+        console.log("playSound", name);
+        new Audio(`/Sounds/${name}.wav`).play();
+      };
+
+      // Play a sound that was previously registered with registerSound
+      const playRegisteredSound = (soundId) => {
+        if (typeof sounds[soundId] === "undefined") {
+          console.error("No registered sound at", soundId);
+          return;
+        }
+        sounds[soundId].play();
+      };
+
+      const stopRegisteredSound = (soundId) => {
+        if (typeof sounds[soundId] === "undefined") {
+          console.error("No registered sound at", soundId);
+          return;
+        }
+        sounds[soundId].stop();
+      };
+
+      const pauseRegisteredSound = (soundId) => {
+        if (typeof sounds[soundId] === "undefined") {
+          console.error("No registered sound at", soundId);
+          return;
+        }
+        sounds[soundId].pause();
+      };
+
+      const getHighscore = (key) => {
+        // Called on InitProgram() "doesn't seem to be called though??"
+        const storageKey = "holotape:highscore:" + key;
+        console.log("getHighscore", storageKey);
+        return localStorage.getItem(storageKey);
+      };
+
+      const setHighscore = (key, score) => {
+        const storageKey = "holotape:highscore:" + key;
+        console.log("setHighscore", storageKey, score);
+
+        const lastScore = localStorage.getItem(storageKey);
+        if (!lastScore || score > lastScore)
+          localStorage.setItem(storageKey, score);
+      };
+
+      const RegisterMovie = () => {
+        // Only present in app versions
+        console.log("RegisterMovie");
+      };
+
+      const closeHolotape = () => {
+        console.log("Quit Game");
+        window.close();
+      };
+      const setSaveData = (key, data) => {
+        console.log("setSaveData", key, data);
+      };
+      const sendMinigamePlayedEvent = (cumulatedPlayTime, gameCounter) => {
+        console.log("sendMinigamePlayedEvent".cumulatedPlayTime, gameCounter);
+      };
+
+      window.addEventListener("DOMContentLoaded", () => {
+        let ruffle = window.RufflePlayer.newest();
+        let player = ruffle.createPlayer();
+        let container = document.getElementById("player-container");
+        container.appendChild(player);
+
+        // Debugging
+        // setTimeout(() => {
+        //   console.log("calling external");
+        //   player.ruffle().callExternalInterface("dsadsadsadsa", true);
+        // }, 2000);
+
+        player.ruffle().load({
+          backgroundColor: "#000000",
+          url: `${basePath}/${game}.swf`,
+          allowScriptAccess: true,
+          splashScreen: false,
+          letterbox: "off",
+          autoplay: "on",
+          unmuteOverlay: "hidden",
+          base: basePath,
+          logLevel: "info",
+          preferredRenderer: "canvas",
+          gamepadButtonMapping: {
+            "dpad-up": 38,
+          },
+          // fontSources: []
+        });
+      });
+    </script>
+    <script src="/node_modules/@ruffle-rs/ruffle/ruffle.js"></script>
+  </body>
+</html>
